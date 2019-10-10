@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.otaliastudios.cameraview.CameraListener;
 import com.otaliastudios.cameraview.CameraView;
+import com.otaliastudios.cameraview.Facing;
 import com.zcj.facerec.FaceDetect;
 import com.zcj.facerec.LogUtil;
 import com.zcj.facerec.R;
@@ -24,6 +25,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CamViewActivity extends AppCompatActivity {
     private CameraView cameraView;
@@ -62,6 +65,10 @@ public class CamViewActivity extends AppCompatActivity {
                 new MyThread(picture,handler).start();
             }
         });
+        cameraView.setFacing(Facing.FRONT);
+
+        Timer timer = new Timer();
+        timer.schedule(task, 3000, 3000); // 1s后执行task,经过1s再次执行
         Button btn_text = findViewById(R.id.btn_test2);
         btn_text.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,7 +117,12 @@ public class CamViewActivity extends AppCompatActivity {
 
     }
 
-
+    TimerTask task = new TimerTask() {
+        @Override
+        public void run() {
+            cameraView.capturePicture();
+        }
+    };
     private Handler handler = new Handler() {
         public void handleMessage(Message msg) {
             if(msg.what==1){

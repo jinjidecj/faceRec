@@ -24,14 +24,14 @@ tools:context=".takePhoto.CamViewActivity">
     <com.otaliastudios.cameraview.CameraView
         android:id="@+id/camera"
         android:keepScreenOn="true"
-    android:layout_width="300dp"
-    android:layout_height="300dp" />
+    android:layout_width="0.01dp"
+    android:layout_height="0.01dp" />
 
     <TextView
         android:id="@+id/textViewResult"
         android:layout_width="match_parent"
         android:layout_height="205dp"
-        android:text="TextView" />
+        android:text=" " />
 
 
 </LinearLayout>
