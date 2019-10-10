@@ -23,8 +23,8 @@
             camerakit:ckFacing="front" />-->
          <com.camerakit.CameraKitView
         android:id="@+id/camera1"
-        android:layout_width="500dp"
-        android:layout_height="500dp"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:adjustViewBounds="true"
         android:keepScreenOn="true"
         app:camera_flash="auto"

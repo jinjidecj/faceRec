@@ -14,14 +14,22 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.zcj.facerec.takePhoto.CamActivity;
+import com.zcj.facerec.takePhoto.CamViewActivity;
 import com.zcj.facerec.takePhoto.MyService;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private final int PICK_IMAGE = 1;
     private MyThread mMyThread;
     private AlertDialog dialog;
+    private TextView txResult;
     // 要申请的权限
     private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.PACKAGE_USAGE_STATS,
             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.INTERNET, Manifest.permission.WAKE_LOCK,
@@ -39,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        txResult = findViewById(R.id.txResult);
         Button btnTakePhoto = findViewById(R.id.button2);
         btnTakePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +67,14 @@ public class MainActivity extends AppCompatActivity {
                 //Toast.makeText(getApplicationContext(),"开启人脸",Toast.LENGTH_SHORT).show();
             }
         });
-
+        Button btnCam3 = findViewById(R.id.button4);
+        btnCam3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent cam = new Intent(MainActivity.this, CamViewActivity.class);
+                startActivity(cam);
+            }
+        });
         // 版本判断。当手机系统大于 23 时，才有必要去判断权限是否获取
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
@@ -126,21 +142,76 @@ public class MainActivity extends AppCompatActivity {
              ByteArrayOutputStream bos = new ByteArrayOutputStream();
              bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
              byte[] bt = bos.toByteArray();
-             mMyThread = new MyThread(bt);
+             mMyThread = new MyThread(bt,handler);
              mMyThread.start();
          }
     }
+    private Handler handler = new Handler() {
+        public void handleMessage(Message msg) {
+            if(msg.what==1){
+                txResult.append(" "+(String)msg.obj);
+                LogUtil.d("ddd "+(String)msg.obj);
+            }else if(msg.what==2){
+                txResult.append(" "+(String)msg.obj);
+                LogUtil.d("ddd "+(String)msg.obj);
+            }
+
+            super.handleMessage(msg);
+        }
+    };
     private static class MyThread extends Thread {
 
         private byte[] bt;
-
+        private Handler handler;
         public MyThread(byte[] bt) {
             this.bt = bt;
+        }
+        public MyThread(byte[] bt,Handler ha) {
+            this.bt = bt;
+            handler=ha;
         }
 
         @Override
         public void run() {
-            FaceDetect.detect(bt);//人脸检测
+
+            String result  = FaceDetect.detect(bt);//人脸检测
+            try {
+                JSONObject root = new JSONObject(result);
+                int errorCode = root.getInt("error_code");
+                if(errorCode==0){
+                    Message message = new Message();
+                    message.what=2;
+                    JSONObject resultJson = root.getJSONObject("result");
+                    int face_num = resultJson.getInt("face_num");
+                    int i = 0;
+                    JSONArray faceList = resultJson.getJSONArray("face_list");
+                    String addResult = "";
+                    while (face_num>0){
+                        JSONObject resultOneJson = faceList.getJSONObject(i);
+                        int age = resultOneJson.getInt("age");
+                        JSONObject genderJson = resultOneJson.getJSONObject("gender");
+                        String type = genderJson.getString("type");
+                        double probability = genderJson.getDouble("probability");
+                        if(type.equals("male")&&probability>0.0){
+                            addResult=addResult+"性别：男，年龄："+age+"，可靠性："+probability*100+"%\n";
+                        }else if(type.equals("female")&&probability>0.0){
+                            addResult=addResult+"性别：女，年龄："+age+"，可靠性："+probability*100+"%\n";
+                        }
+                        i++;
+                        face_num--;
+                    }
+                    message.obj = addResult;
+                    handler.sendMessage(message);
+                }else{
+                    Message message = new Message();
+                    message.what=1;
+                    message.obj="识别失败";
+                    handler.sendMessage(message);
+
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 

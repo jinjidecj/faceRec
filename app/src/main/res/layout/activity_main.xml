@@ -33,6 +33,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="115dp"
+        android:layout_marginBottom="179dp"
         android:text="cam" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="115dp"
+        android:text="cam3" />
+
+    <TextView
+        android:id="@+id/txResult"
+        android:layout_width="wrap_content"
+        android:layout_height="500dp"
+        android:layout_above="@+id/imageView1"
+        android:layout_marginBottom="-47dp" />
 </RelativeLayout>
