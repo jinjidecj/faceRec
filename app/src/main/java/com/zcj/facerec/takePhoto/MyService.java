@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -44,7 +45,8 @@ public class MyService extends Service {
  
 	private Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
-			if (!myWindow.isAttachedToWindow()) {
+
+			if (myWindow!=null && !myWindow.isAttachedToWindow()) {
 				mWindowManager.addView(myWindow, Params);
 			}
 				/*if (isHome()&& myWindow!=null) {
@@ -75,7 +77,7 @@ public class MyService extends Service {
 		Log.d("MyService", "onCreate");
 		// 定时器类
 		Timer timer = new Timer();
-		timer.schedule(task, 1000, 1000); // 1s后执行task,经过1s再次执行
+		timer.schedule(task, 3000, 1000); // 1s后执行task,经过1s再次执行
 		
 		//对于6.0以上的设备
 		if (Build.VERSION.SDK_INT >= 23) {//手动去开启悬浮窗
@@ -110,7 +112,9 @@ public class MyService extends Service {
 
 		//布局类型
 		Params.type = LayoutParams.TYPE_APPLICATION_OVERLAY; // 系统提示类型,重要
-
+		Params.type = WindowManager.LayoutParams.TYPE_TOAST;
+		Params.type = WindowManager.LayoutParams.TYPE_PHONE;
+		//Params.format = PixelFormat.TRANSPARENT;
 		//布局flags
 		Params.flags = LayoutParams.FLAG_NOT_FOCUSABLE; // 不能抢占聚焦点
 		Params.flags = Params.flags | LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;

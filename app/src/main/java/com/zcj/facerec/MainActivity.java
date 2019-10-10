@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.zcj.facerec.takePhoto.CamActivity;
 import com.zcj.facerec.takePhoto.MyService;
 
 import java.io.ByteArrayOutputStream;
@@ -43,9 +44,18 @@ public class MainActivity extends AppCompatActivity {
         btnTakePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent face = new Intent(MainActivity.this, MyService.class);
-                startService(face);
-                Toast.makeText(getApplicationContext(),"开启人脸",Toast.LENGTH_SHORT).show();
+                Intent face = new Intent(MainActivity.this, CamActivity.class);
+                startActivity(face);
+                //Toast.makeText(getApplicationContext(),"开启人脸",Toast.LENGTH_SHORT).show();
+            }
+        });
+        Button btnCam= findViewById(R.id.button3);
+        btnCam.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent cam = new Intent(MainActivity.this, CameraKitActivity.class);
+                startActivity(cam);
+                //Toast.makeText(getApplicationContext(),"开启人脸",Toast.LENGTH_SHORT).show();
             }
         });
 

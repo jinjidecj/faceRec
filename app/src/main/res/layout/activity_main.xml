@@ -27,4 +27,12 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="56dp"
         android:text="hide photo" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="115dp"
+        android:text="cam" />
 </RelativeLayout>
