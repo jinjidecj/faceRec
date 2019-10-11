@@ -3,12 +3,16 @@ package com.zcj.facerec.takePhoto;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Camera;
+import android.graphics.Picture;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.otaliastudios.cameraview.CameraListener;
@@ -31,6 +35,9 @@ import java.util.TimerTask;
 public class CamViewActivity extends AppCompatActivity {
     private CameraView cameraView;
     private TextView txResult;
+    private Timer timerCamRec;
+    private final int camRecTime=3000;//每隔几ms进行一次人脸识别
+    private final int camRecStart = 3000;//程序启动后延时几秒启动人脸识别
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,36 +46,44 @@ public class CamViewActivity extends AppCompatActivity {
         txResult = findViewById(R.id.textViewResult);
 
         cameraView.addCameraListener(new CameraListener() {
+
             @Override
-            public void onPictureTaken(byte[] picture) {
+            public void onPictureTaken(byte[] picture1) {
+                final byte[]picture = picture1;
                 // Create a bitmap or a file...
                 // CameraUtils will read EXIF orientation for you, in a worker thread.
-                LogUtil.d("get pic"+picture);
-                String galleryPath= Environment.getExternalStorageDirectory()
-                        + File.separator + Environment.DIRECTORY_DCIM
-                        +File.separator+"FaceRec"+File.separator;
-                File filePath  = new File(galleryPath);
-                if (!filePath.exists()) {
-                    /** 注意这里是 mkdirs()方法 可以创建多个文件夹 */
-                    filePath.mkdirs();
-                }
-                Date date = new Date();
-                File savedPhoto = new File(galleryPath, "photo"+date.toString()+".jpg");
-                try {
-                    FileOutputStream outputStream = new FileOutputStream(savedPhoto.getPath());
-                    outputStream.write(picture);
-                    outputStream.close();
-                } catch (java.io.IOException e) {
-                    e.printStackTrace();
-                }
-               // rec(picture);
-                new MyThread(picture,handler).start();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogUtil.d("get pic"+picture);
+                        String galleryPath= Environment.getExternalStorageDirectory()
+                                + File.separator + Environment.DIRECTORY_DCIM
+                                +File.separator+"FaceRec"+File.separator;
+                        File filePath  = new File(galleryPath);
+                        if (!filePath.exists()) {
+                            /** 注意这里是 mkdirs()方法 可以创建多个文件夹 */
+                            filePath.mkdirs();
+                        }
+                        Date date = new Date();
+                        File savedPhoto = new File(galleryPath, "photo"+date.toString()+".jpg");
+                        try {
+                            FileOutputStream outputStream = new FileOutputStream(savedPhoto.getPath());
+                            outputStream.write(picture);
+                            outputStream.close();
+                        } catch (java.io.IOException e) {
+                            e.printStackTrace();
+                        }
+                        // rec(picture);
+                        new MyThread(picture,handler).start();
+                    }
+                }).start();
+
             }
         });
-        cameraView.setFacing(Facing.FRONT);
+        //cameraView.setFacing(Facing.FRONT);
 
-        Timer timer = new Timer();
-        timer.schedule(task, 3000, 3000); // 1s后执行task,经过1s再次执行
+        //Timer timer = new Timer();
+        //timer.schedule(task, 3000, 3000); // 1s后执行task,经过1s再次执行
         Button btn_text = findViewById(R.id.btn_test2);
         btn_text.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -76,7 +91,53 @@ public class CamViewActivity extends AppCompatActivity {
                 cameraView.capturePicture();
             }
         });
+
+        //显示或关闭拍照预览串口
+        Switch swShow = findViewById(R.id.sw_cam_show);
+        swShow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    LogUtil.d("check true");
+                    ViewGroup.LayoutParams linearParams = cameraView.getLayoutParams();
+                    linearParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    linearParams.width =ViewGroup.LayoutParams.WRAP_CONTENT;
+                    cameraView.setLayoutParams(linearParams);
+                }else{
+                    LogUtil.d("check false");
+                    ViewGroup.LayoutParams linearParams = cameraView.getLayoutParams();
+                    linearParams.height = 1;
+                    linearParams.width = 1;
+                    cameraView.setLayoutParams(linearParams);
+                }
+            }
+        });
+        //打开或关闭自动人脸识别
+        Switch swCamStopStart = findViewById(R.id.sw_cam_stop_start);
+        swCamStopStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    LogUtil.d("check true");
+                    openCamRec();
+                }else{
+                    LogUtil.d("check false");
+                    closeCamRec();
+                }
+            }
+        });
+
     }
+    private void openCamRec(){
+        timerCamRec = new Timer();
+        timerCamRec.schedule(task, camRecStart, camRecTime); // 1s后执行task,经过1s再次执行
+    }
+    private void closeCamRec(){
+        if(timerCamRec!=null)
+            timerCamRec.cancel();
+    }
+
+
     private void rec(final byte[]bt){
         new Thread(new Runnable() {
             @Override
